@@ -313,7 +313,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 	
 	// add message-received-plugin-hook here!
 	// "easy" check if it is a JSON-payload..
-	if (payloadlen >= 2 && msgStartsWithBracket && msgEndsWithBracket) {
+	if (payloadlen >= 2 && msgStartsWithBracket && msgEndsWithBracket && strstr(payload.ptr, "\"__t\":") == NULL) {
 
 		long            ms; // Milliseconds
 		struct timespec spec;

@@ -29,7 +29,8 @@ RUN set -x && \
         -DLWS_WITH_ZIP_FOPS=OFF \
         -DLWS_WITH_ZLIB=OFF && \
     make -j "$(nproc)" && \
-    rm -rf /root/.cmake
+    rm -rf /root/.cmake && \
+    apk del build-deps
 
 COPY mosq.tar.gz /tmp
 
