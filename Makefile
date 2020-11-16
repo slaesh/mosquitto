@@ -123,7 +123,7 @@ localdocker : reallyclean
 	mkdir -p dockertmp/mosquitto-${VERSION}
 	cp -r ${DISTFILES} dockertmp/mosquitto-${VERSION}/
 	cd dockertmp/; tar -zcf mosq.tar.gz mosquitto-${VERSION}/
-	cp dockertmp/mosq.tar.gz .
-#	rm -rf dockertmp/
+	cp dockertmp/mosq.tar.gz ./docker/local
+	rm -rf dockertmp/
 #	cd docker/local && docker build . -t "mosquitto"
 
