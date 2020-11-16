@@ -1,5 +1,4 @@
-#FROM alpine:3.12
-FROM alpine
+FROM alpine:3.12
 
 LABEL maintainer="Roger Light <roger@atchoo.org>" \
     description="Eclipse Mosquitto MQTT Broker"
@@ -32,7 +31,6 @@ RUN set -x && \
     make -j "$(nproc)" && \
     rm -rf /root/.cmake
 
-RUN make localdocker
 COPY mosq.tar.gz /tmp
 
 RUN mkdir -p /build/mosq && \
