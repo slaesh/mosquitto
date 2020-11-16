@@ -1,4 +1,4 @@
-name: build our image
+name: build our images
 
 on:
   push:
@@ -10,11 +10,16 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v2
+
       - name: install buildx
         id: buildx
         #uses: crazy-max/ghaction-docker-buildx@v1
         uses: crazy-max/ghaction-docker-buildx@v3.3.1
         with:
           version: latest
+
+      - name: login to docker hub
+        run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
       - name: build the image
-        run: docker buildx build --tag slaesh/mosquitto-w-timestamps:latest --platform linux/amd64,linux/arm/v7,linux/arm64 ./docker/local
+        run: docker buildx build  --push --tag slaesh/mosquitto-w-timestamps:latest --platform linux/amd64,linux/arm/v7,linux/arm64 ./docker/local
