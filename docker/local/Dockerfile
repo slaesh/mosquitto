@@ -5,8 +5,6 @@ LABEL maintainer="Roger Light <roger@atchoo.org>" \
 
 ENV LWS_VERSION=2.4.2
 
-COPY mosq.tar.gz /tmp
-
 RUN set -x && \
     apk --no-cache add --virtual build-deps \
         build-base \
@@ -31,8 +29,11 @@ RUN set -x && \
         -DLWS_WITH_ZIP_FOPS=OFF \
         -DLWS_WITH_ZLIB=OFF && \
     make -j "$(nproc)" && \
-    rm -rf /root/.cmake && \
-    mkdir -p /build/mosq && \
+    rm -rf /root/.cmake
+
+COPY mosq.tar.gz /tmp
+
+RUN mkdir -p /build/mosq && \
     tar --strip=1 -xf /tmp/mosq.tar.gz -C /build/mosq && \
     rm /tmp/mosq.tar.gz && \
     make -C /build/mosq -j "$(nproc)" \
@@ -64,6 +65,13 @@ RUN set -x && \
     rm -rf /build
 
 VOLUME ["/mosquitto/data", "/mosquitto/log"]
+
+RUN date
+RUN apk add -U tzdata
+RUN cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+RUN date
+#RUN echo "Europe/Berlin" > /etc/timezone
+#RUN dpkg-reconfigure -f noninteractive tzdata
 
 # Set up the entry point script and default command
 COPY docker-entrypoint.sh /

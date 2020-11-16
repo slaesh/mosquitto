@@ -284,6 +284,73 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		}
 	}
 
+	bool msgStartsWithBracket = false;
+	uint8_t *pp = payload.ptr - 1;
+	for (uint16_t idx = 0; idx < payloadlen; ++idx) {
+		++pp;
+
+		if (*pp == ' ' || *pp == '\n' || *pp == '\r') continue;
+
+		msgStartsWithBracket = (*pp == '{');			
+		break;
+	}
+
+	bool msgEndsWithBracket = false;
+	uint16_t idxOfEndBracket = 0;
+	pp = payload.ptr + payloadlen;
+	for (int16_t idx = payloadlen - 1; idx >= 0; --idx) {
+		--pp;
+
+		if (*pp == ' ' || *pp == '\n' || *pp == '\r') continue;
+
+		if (*pp == '}') {
+			msgEndsWithBracket = true;
+			idxOfEndBracket = idx;
+		}
+
+		break;
+	}
+	
+	// add message-received-plugin-hook here!
+	// "easy" check if it is a JSON-payload..
+	if (payloadlen >= 2 && msgStartsWithBracket && msgEndsWithBracket) {
+
+		long            ms; // Milliseconds
+		struct timespec spec;
+		clock_gettime(CLOCK_REALTIME, &spec);
+		ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+
+  		time_t tt = time(NULL);
+  		struct tm tm = *localtime(&tt);
+  		// log__printf(NULL, MOSQ_LOG_NOTICE, "%d.%02d.%02d %02d:%02d:%02d.%03d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
+
+		// calculate new length
+		uint16_t newPayloadlen = payloadlen + strlen(",'__t':'2020.11.28 12:44:32.555' }") + 2 /* spare */;
+
+		// alloc new payload!
+		mosquitto__payload_uhpa newPayload;
+		UHPA_ALLOC(newPayload, newPayloadlen);
+
+		// copy old payload! except the last bracket.. ;)
+		pp = newPayload.ptr;
+		snprintf(newPayload.ptr, newPayloadlen, "%s", payload.ptr);
+		pp += idxOfEndBracket;
+
+		// free old payload!
+		UHPA_FREE(payload, payloadlen);
+
+		// append timestamp
+		snprintf(pp, newPayloadlen-idxOfEndBracket, ",\"__t\":\"%d.%02d.%02d %02d:%02d:%02d.%03d\" }", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
+
+		// re-set payloadlen
+		payloadlen = strlen(newPayload.ptr);
+
+		// re-set payload
+		payload = newPayload;
+
+		// log__printf(NULL, MOSQ_LOG_NOTICE, "new msg '%s' %d", newPayload.ptr, payloadlen);
+	}
+
 	/* Check for topic access */
 	rc = mosquitto_acl_check(db, context, topic, payloadlen, UHPA_ACCESS(payload, payloadlen), qos, retain, MOSQ_ACL_WRITE);
 	if(rc == MOSQ_ERR_ACL_DENIED){
