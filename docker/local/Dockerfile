@@ -29,8 +29,7 @@ RUN set -x && \
         -DLWS_WITH_ZIP_FOPS=OFF \
         -DLWS_WITH_ZLIB=OFF && \
     make -j "$(nproc)" && \
-    rm -rf /root/.cmake && \
-    apk del build-deps
+    rm -rf /root/.cmake
 
 COPY mosq.tar.gz /tmp
 
@@ -67,12 +66,7 @@ RUN mkdir -p /build/mosq && \
 
 VOLUME ["/mosquitto/data", "/mosquitto/log"]
 
-RUN date
-RUN apk add -U tzdata
-RUN cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-RUN date
-#RUN echo "Europe/Berlin" > /etc/timezone
-#RUN dpkg-reconfigure -f noninteractive tzdata
+RUN date && apk add --no-cache --virtual build-deps -U tzdata && cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime && date
 
 # Set up the entry point script and default command
 COPY docker-entrypoint.sh /
