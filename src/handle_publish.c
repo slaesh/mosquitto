@@ -311,6 +311,8 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		break;
 	}
 	
+	log__printf(NULL, MOSQ_LOG_NOTICE, "append time? %d %d %d", msgStartsWithBracket, msgEndsWithBracket, idxOfEndBracket);
+
 	// add message-received-plugin-hook here!
 	// "easy" check if it is a JSON-payload..
 	if (payloadlen >= 2 && msgStartsWithBracket && msgEndsWithBracket && strstr(payload.ptr, "\"__t\":") == NULL) {
