@@ -65,8 +65,6 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		return MOSQ_ERR_PROTOCOL;
 	}
 
-	log__printf(NULL, MOSQ_LOG_NOTICE, "incoming msg");
-
 	payload.ptr = NULL;
 
 	dup = (header & 0x08)>>3;
@@ -287,10 +285,9 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 	}
 
 	bool msgStartsWithBracket = false;
-	uint8_t *pp = payload.ptr - 1;
-	for (uint16_t idx = 0; idx < payloadlen; ++idx) {
-		++pp;
+	uint8_t *pp = UHPA_ACCESS(payload, payloadlen);
 
+	for (uint16_t idx = 0; idx < payloadlen; ++idx,++p) {
 		if (*pp == ' ' || *pp == '\n' || *pp == '\r') continue;
 
 		msgStartsWithBracket = (*pp == '{');			
@@ -299,10 +296,9 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 
 	bool msgEndsWithBracket = false;
 	uint16_t idxOfEndBracket = 0;
-	pp = payload.ptr + payloadlen;
-	for (int16_t idx = payloadlen - 1; idx >= 0; --idx) {
-		--pp;
+	pp = UHPA_ACCESS(payload, payloadlen) + payloadlen - 1;
 
+	for (int16_t idx = payloadlen; idx >= 0; --idx, --pp) {
 		if (*pp == ' ' || *pp == '\n' || *pp == '\r') continue;
 
 		if (*pp == '}') {
@@ -313,7 +309,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		break;
 	}
 	
-	log__printf(NULL, MOSQ_LOG_NOTICE, "append time? %d %d %d", msgStartsWithBracket, msgEndsWithBracket, idxOfEndBracket);
+	// log__printf(NULL, MOSQ_LOG_NOTICE, "append time? %d %d %d", msgStartsWithBracket, msgEndsWithBracket, idxOfEndBracket);
 
 	// add message-received-plugin-hook here!
 	// "easy" check if it is a JSON-payload..
@@ -326,7 +322,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 
   		time_t tt = time(NULL);
   		struct tm tm = *localtime(&tt);
-  		log__printf(NULL, MOSQ_LOG_NOTICE, "%d.%02d.%02d %02d:%02d:%02d.%03d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
+  		// log__printf(NULL, MOSQ_LOG_NOTICE, "%d.%02d.%02d %02d:%02d:%02d.%03d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
 
 		// calculate new length
 		uint16_t newPayloadlen = payloadlen + strlen(",'__t':'2020.11.28 12:44:32.555' }") + 2 /* spare */;
@@ -336,8 +332,8 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		UHPA_ALLOC(newPayload, newPayloadlen);
 
 		// copy old payload! except the last bracket.. ;)
-		pp = newPayload.ptr;
-		snprintf(newPayload.ptr, newPayloadlen, "%s", payload.ptr);
+		pp = UHPA_ACCESS(newPayload, newPayloadlen);
+		snprintf(pp, newPayloadlen, "%s", UHPA_ACCESS(payload, payloadlen));
 		pp += idxOfEndBracket;
 
 		// free old payload!
@@ -347,7 +343,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		snprintf(pp, newPayloadlen-idxOfEndBracket, ",\"__t\":\"%d.%02d.%02d %02d:%02d:%02d.%03d\" }", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
 
 		// re-set payloadlen
-		payloadlen = strlen(newPayload.ptr);
+		payloadlen = strlen(UHPA_ACCESS(newPayload, newPayloadlen));
 
 		// re-set payload
 		payload = newPayload;
