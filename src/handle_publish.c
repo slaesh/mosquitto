@@ -324,7 +324,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 
   		time_t tt = time(NULL);
   		struct tm tm = *localtime(&tt);
-  		// log__printf(NULL, MOSQ_LOG_NOTICE, "%d.%02d.%02d %02d:%02d:%02d.%03d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
+  		log__printf(NULL, MOSQ_LOG_NOTICE, "%d.%02d.%02d %02d:%02d:%02d.%03d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
 
 		// calculate new length
 		uint16_t newPayloadlen = payloadlen + strlen(",'__t':'2020.11.28 12:44:32.555' }") + 2 /* spare */;
