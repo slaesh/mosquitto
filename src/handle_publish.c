@@ -334,13 +334,13 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		// copy old payload! except the last bracket.. ;)
 		pp = UHPA_ACCESS(newPayload, newPayloadlen);
 		snprintf(pp, newPayloadlen, "%s", UHPA_ACCESS(payload, payloadlen));
-		pp += idxOfEndBracket;
+		pp += idxOfEndBracket - 1;
 
 		// free old payload!
 		UHPA_FREE(payload, payloadlen);
 
 		// append timestamp
-		snprintf(pp, newPayloadlen - idxOfEndBracket - 1, ",\"__t\":\"%d.%02d.%02d %02d:%02d:%02d.%03d\" }", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
+		snprintf(pp, newPayloadlen - idxOfEndBracket, ",\"__t\":\"%d.%02d.%02d %02d:%02d:%02d.%03d\" }", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
 
 		// re-set payloadlen
 		payloadlen = strlen(UHPA_ACCESS(newPayload, newPayloadlen));
@@ -348,7 +348,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		// re-set payload
 		payload = newPayload;
 
-		// log__printf(NULL, MOSQ_LOG_NOTICE, "new msg '%s' %d", newPayload.ptr, payloadlen);
+		// log__printf(NULL, MOSQ_LOG_NOTICE, "new msg '%s' %d", UHPA_ACCESS(newPayload, newPayloadlen), payloadlen);
 	}
 
 	/* Check for topic access */
