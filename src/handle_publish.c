@@ -340,7 +340,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		UHPA_FREE(payload, payloadlen);
 
 		// append timestamp
-		snprintf(pp, newPayloadlen-idxOfEndBracket, ",\"__t\":\"%d.%02d.%02d %02d:%02d:%02d.%03d\" }", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
+		snprintf(pp, newPayloadlen - idxOfEndBracket - 1, ",\"__t\":\"%d.%02d.%02d %02d:%02d:%02d.%03d\" }", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
 
 		// re-set payloadlen
 		payloadlen = strlen(UHPA_ACCESS(newPayload, newPayloadlen));
