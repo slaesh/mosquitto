@@ -298,7 +298,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 	uint16_t idxOfEndBracket = 0;
 	pp = UHPA_ACCESS(payload, payloadlen) + payloadlen - 1;
 
-	for (int16_t idx = payloadlen; idx >= 0; --idx, --pp) {
+	for (int16_t idx = payloadlen - 1; idx >= 0; --idx, --pp) {
 		if (*pp == ' ' || *pp == '\n' || *pp == '\r') continue;
 
 		if (*pp == '}') {
@@ -313,7 +313,9 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 
 	// add message-received-plugin-hook here!
 	// "easy" check if it is a JSON-payload..
-	if (payloadlen >= 2 && msgStartsWithBracket && msgEndsWithBracket && strstr(payload.ptr, "\"__t\":") == NULL) {
+	if (payloadlen >= 2
+		 && msgStartsWithBracket && msgEndsWithBracket
+		 && strstr(UHPA_ACCESS(payload, payloadlen), "\"__t\":") == NULL) {
 
 		long            ms; // Milliseconds
 		struct timespec spec;
@@ -334,7 +336,7 @@ int handle__publish(struct mosquitto_db *db, struct mosquitto *context)
 		// copy old payload! except the last bracket.. ;)
 		pp = UHPA_ACCESS(newPayload, newPayloadlen);
 		snprintf(pp, newPayloadlen, "%s", UHPA_ACCESS(payload, payloadlen));
-		pp += idxOfEndBracket - 1;
+		pp += idxOfEndBracket;
 
 		// free old payload!
 		UHPA_FREE(payload, payloadlen);
